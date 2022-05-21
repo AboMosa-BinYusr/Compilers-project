@@ -11,7 +11,7 @@ namespace compiler_project
     class ScannerHelper
     {
         //2.333 
-        static public int isNumber(String s)
+        static public int compilerisNumber(String s)
         {
             int res, i = 0, chAscii, flagFloat = 0, fractCounter = 0;
             char ch;
@@ -69,7 +69,7 @@ namespace compiler_project
             return res;
         }
        
-        static public int isIdentifier(String lex)
+        static public int compilerisIdentifier(String lex)
         {
             int chAscii0 = (int)lex[0], chAsciiR = 0;
             int firstCharacter = 0;

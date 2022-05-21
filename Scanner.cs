@@ -7,12 +7,14 @@ using System.Text;
 
 namespace compiler_project
 {
-    class Scanner
+    class CompilerScanner
     {
         static String[,] matric ;
-        public  Scanner(String[,] arr)
-        {  
-            matric = arr;
+        public  CompilerScanner()
+        {
+            Excel2D excel = new Excel2D("F:\\College\\3-Third Year\\2-second semester\\Compiler\\project\\t.xlsx", 1);
+            matric = excel.getArray();
+           
             matric[0, 38] = "+";
             matric[0, 39] = "-";
             matric[0, 40] = "*";
@@ -20,89 +22,88 @@ namespace compiler_project
             matric[0, 55] = "'";
         }
        
-        public Dictionary<string, dynamic> scanner(String text)
+        public Dictionary<string, dynamic> allTextScanner(String text)
         {
+            //Dictionary thet will return
             Dictionary<string, dynamic> output = new Dictionary<string, dynamic>();
 
             List<Dictionary<string, dynamic>> scannarOutPut= new List<Dictionary<string, dynamic>>();
 
             List<String> Lines = text.Split('\n').ToList(); // carry all lines in the code
-            bool isStartComment = false;
+            bool isStartComment = false;// multi line comment is close
             int errorCounter = 0;
             foreach (var line in Lines)//to loop on each line in code  1 by 1
-            {//Identifier
+            {
 
                 List<String> Words = line.Split(' ').ToList(); // carry all Words in the each line
-                 Words.RemoveAll(r => r == "");
+                 Words.RemoveAll(r => r == "");//remove empty words
                 foreach (var word in Words)//to loop on each Word in line  1 by 1
                 {
+                    //if  multi line comment ended set it close 
                     if (word == "*>")
                     {
                         isStartComment = false;
                     }
+                    //if  multi line comment is opend go to next word
                     if (isStartComment) {
                         continue;
                     }
-                    Dictionary<string, dynamic> token =wordScanner(word, Lines.IndexOf(line), Words.IndexOf(word));
-                    if (token["token type"] != "word")
+                    // get what this word mach
+                    Dictionary<string, dynamic> token = oneWordScanner(word, Lines.IndexOf(line), Words.IndexOf(word));
+                    //if token type is "word" it may be  Identifier or error
+                    if (token["token type"] == "word")
                     {
-                        
-                        //Console.WriteLine("Line : " + Lines.IndexOf(line) + ", Token Text: " + word + ", Token Type: " + token);
-                    }
-                    else
-                    {
-                        if (ScannerHelper.isIdentifier(word) == 1)
+                        if (ScannerHelper.compilerisIdentifier(word) == 1)
                         {
                             token["token type"] = "157 Identifier";
-                            //Console.WriteLine("Line : " + Lines.IndexOf(line) + ", Token Text: " + word + ", Token Type: " + "Identifier");
+                             
                         }
                         else
                         {
                             token["token type"] = "Error";
-                            //Console.WriteLine("Line : " + Lines.IndexOf(line) + ", Token Text: " + word + ", Token Type: " + "Error Not Found");
                             errorCounter++;
                         }
                     }
+                    //if  word is singel line comment go to next line
                     if (word == "--")
                     {
                         break;
                     }
+                    //if  word is multe line comment set isStartComment true
                     if (word == "<*")
                     {
                         isStartComment = true;
 
                     }
+                    //add new value to lise of Dictionary 
                     scannarOutPut.Add(token);
                 }
-                
-                //Console.WriteLine("___________________________________________________________");
             }
-            //Console.WriteLine("\n Total number of erorr is "+errorCounter);
+            //add valus to Dictionary and return it
             output.Add("scannarOutPut", scannarOutPut);
             output.Add("numberOfError",errorCounter);
             return output;
         }
         //if The word is in the language set words
-        public Dictionary<string, dynamic> wordScanner(String text,int lineNumber,int tokenNumber)
+        public Dictionary<string, dynamic> oneWordScanner(String text,int lineNumber,int tokenNumber)
         {
+            //Dictionary thet will return
             Dictionary<string, dynamic> wordScannarOutput = new Dictionary<string, dynamic>();
 
             string word = text;
-            string tokenType = "";
-            string token = "";
+            string tokenType = "";//carry token type (id,erorr,class,...)
+            string token = "";//carrt state number
             int row = 0;
             int i = 0;// number of litter in word
 
             //check if the word is int or float
-            if (ScannerHelper.isNumber(text) != 0)
+            if (ScannerHelper.compilerisNumber(text) != 0)
             {
-                //Console.WriteLine("Line : " + lineNumber + ", Token Text: " + text + ", Token Type: " + "Constant");
                 tokenType = "1 Constant";
             }
-            
             else
             {
-                 //loop on columns
+                //loop on columns
                 for (int y = 0; y < matric.GetLength(1); y++)
                 {
                     //if The first character is in the language set characters
@@ -110,20 +111,19 @@ namespace compiler_project
                     {
                         //take number under token
                         token = matric[1, y];
-                    }//else return identifier
+                    }
                 }
+                //loop untel break
                 while (true)
                 {
                     // if first character is not in the language set characters
                     if (token == "")
                     {
-                        //Line : 1 Token Text: Program Token Type: Start Statement
-                        //Console.WriteLine("Line : " + lineNumber + ", Token Text: " + text + ", Token Type: " + "Identifier");
                         tokenType = "word";
                         break;
                     }
-                    // ensure if token is number not string
-                    if (ScannerHelper.isNumber(token) == 2)
+                    // ensure if token is number(29) not string(45 class)
+                    if (ScannerHelper.compilerisNumber(token) == 2)
                     {
                         //loop to get down to the row that token refer to
                         for (int r = 0; r < matric.GetLength(0); r++)
@@ -135,45 +135,46 @@ namespace compiler_project
                                 i++;
                             }
                         }
+                        //if word ended and not find a end token
                         if (i == word.Length)
                         {
                             tokenType = "word";
-                            //Console.WriteLine("Line : " + lineNumber + ", Token Text: " + text + ", Token Type: " + "Identifier");
                             break;
                         }
                         for (int c = 0; c < matric.GetLength(1); c++)
                         {
+                            //check if next character mack token in this row
                             if (matric[0, c] == Char.ToString(word[i]))
                             {
+                                //if find tack it
                                 token = matric[row, c];
                             }
                         }
                     }
-                    // ensure if token is string  (we may find our token)
+                    //token is string (45 class) (we may find our token)
                     else
                     {
+                        // if we fine end token and word ended
                         if (i == (word.Length - 1))
                         {
-                            //Console.WriteLine(token);
                             tokenType = token;
-                            //Console.WriteLine("Line : " + lineNumber + ", Token Text: " + text + ", Token Type: " + token);
                         }
-                        else if(i< (word.Length - 1))
+                        // if we fine end token and word is not ended
+                        else if (i< (word.Length - 1))
                         {
                             token = token.Split(' ')[0];
-                            //Console.WriteLine("token is "+token);
                             continue;
                         }
+                        // else it may be Identifier or error
                         else
                         {
-                            //Console.WriteLine("Identifier");
                             tokenType = "word";
-                            //Console.WriteLine("Line : " + lineNumber + ", Token Text: " + text + ", Token Type: " + "Identifier");
                         }
                         break;
                     }
                 }
             }
+            //add valus to Dictionary and return it
             wordScannarOutput.Add("line", lineNumber);
             wordScannarOutput.Add("token text", text);
             wordScannarOutput.Add("token type", tokenType);

@@ -8,16 +8,14 @@ namespace compiler_project
         static void Main(string[] args)
         {
             {
-                Excel2D excel = new Excel2D("F:\\College\\3-Third Year\\2-second semester\\Compiler\\project\\t.xlsx", 1);
-                String[,]  matrix = excel.getArray();
-               
-                Scanner scanner = new Scanner(matrix);
+                CompilerScanner scanner = new CompilerScanner();
 
                 string text = "End Program \n None ten ( ) { Ilap c = 10 10.10 _1&0we }\n " +
                     "Ilap -- comment \n <* i am \n commented *> \nEnd ";
                 // text = "Category Derive If Else Ilap Silap Clop Series Ilapf Silapf None  Logical terminatethis Rotatewhen Continuewhen Replywith Seop Check situationof Program End";
                 //text =text+ " +  -  *  /  &&  ||  ~ ==  <  >  !=  <=  >= =  . { } [ ]    \"  \' Using ; ( ) <* *> 10 me";
-                Dictionary<string, dynamic> scanneroutPut =scanner.scanner(text);
+                
+                Dictionary<string, dynamic> scanneroutPut =scanner.allTextScanner(text);
                 
                 foreach (var dec in scanneroutPut["scannarOutPut"])
                 {
